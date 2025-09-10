@@ -29,25 +29,25 @@ function Module:onStart()
         2240749601, -- Pure Aluminium
         2112763718, -- Pure Calcium
         159858782,  -- Pure Carbon
-        2031444137, -- Pure Cobalt
+        -- 2031444137, -- Pure Cobalt
         1466453887, -- Pure Copper
-        2147954574, -- Pure Chromium
-        3323724376, -- Pure Flourine
-        3837955371, -- Pure Gold
-        1010524904, -- Pure Hydrogen
-        198782496,  -- Pure Iron
-        3810111622, -- Pure Lithium
-        2421303625, -- Pure Manganese
-        3012303017, -- Pure Nickel
-        1126600143, -- Pure Niobium
-        947806142,  -- Pure Oxygen
-        3211418846, -- Pure Scandium
+        -- 2147954574, -- Pure Chromium
+        -- 3323724376, -- Pure Flourine
+        -- 3837955371, -- Pure Gold
+        -- 1010524904, -- Pure Hydrogen
+        198782496, -- Pure Iron
+        -- 3810111622, -- Pure Lithium
+        -- 2421303625, -- Pure Manganese
+        -- 3012303017, -- Pure Nickel
+        -- 1126600143, -- Pure Niobium
+        -- 947806142,  -- Pure Oxygen
+        -- 3211418846, -- Pure Scandium
         2589986891, -- Pure Silicon
-        1807690770, -- Pure Silver
-        3603734543, -- Pure Sodium
-        3822811562, -- Pure Sulfur
-        752542080,  -- Pure Titanium
-        2007627267, -- Pure Vanadium
+        -- 1807690770, -- Pure Silver
+        -- 3603734543, -- Pure Sodium
+        -- 3822811562, -- Pure Sulfur
+        -- 752542080,  -- Pure Titanium
+        -- 2007627267, -- Pure Vanadium
     }
 
     local indices = {}
@@ -56,7 +56,7 @@ function Module:onStart()
     end
     self.indices = indices
 
-    modula:addTimer("onCheckMachines", 60.0)
+    modula:addTimer("onCheckMachines", 1.0)
 
     self.industry:reportMachines()
     self:restartMachines()
@@ -90,18 +90,14 @@ end
 
 function Module:restartMachine(machine)
     if machine:isStopped() or machine:isMissingIngredients() or machine:isMissingSchematics() then
-        machine:stop()
-        for _, recipe in ipairs(self.recipes) do
-            if machine:setRecipe(recipe) == 0 then
-                machine:start()
-                if machine:isRunning() then
-                    debugf("Started '%s' making %s", machine:name(), machine:mainProduct():getName())
-                    return
-                end
-            end
-        end
+        local index = (1 + (machine.index or 0) % #self.recipes)
+        machine.index= index
+        local recipe = self.recipes[index]
 
-        debugf("Failed to restart '%s'.", machine:name())
+        machine:stop()
+        machine:setRecipe(recipe)
+        machine:start()
+        debugf("Trying '%s' for %s.", machine:mainProduct():getName(), machine:name())
     end
 end
 
