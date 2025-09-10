@@ -91,10 +91,12 @@ end
 function Module:restartMachine(machine)
     if machine:isStopped() or machine:isMissingIngredients() or machine:isMissingSchematics() then
         local index = (1 + (machine.index or 0) % #self.recipes)
-        machine.index= index
+        machine.index = index
         local recipe = self.recipes[index]
 
-        machine:stop()
+        if not machine:isStopped() then
+            machine:stop()
+        end
         machine:setRecipe(recipe)
         machine:start()
         debugf("Trying '%s' for %s.", machine:mainProduct():getName(), machine:name())
