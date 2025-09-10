@@ -56,7 +56,7 @@ function Module:onStart()
     end
     self.indices = indices
 
-    modula:addTimer("onCheckMachines", 1.0)
+    modula:addTimer("onCheckMachines", 10.0)
 
     self.industry:reportMachines()
 end
@@ -89,18 +89,17 @@ end
 
 function Module:restartMachine(machine)
     if machine:isStopped() or machine:isMissingIngredients() or machine:isMissingSchematics() then
-        local currentIndex = machine.currentIndex or 0
-        local nextIndex = 1 + (currentIndex % #self.recipes)
-        machine.currentIndex = nextIndex
-        local recipeId = self.recipes[nextIndex]
         machine:stop()
-        machine:setRecipe(recipeId)
-        machine:start()
-        if machine:isRunning() then
-            debugf("Restarted refinery '%s' with recipe %s", machine:name(), machine:mainProduct():getName())
-        else
-            debugf("Failed to restart refinery '%s' with recipe %s", machine:name(), machine:mainProduct():getName())
+        for _, recipe in ipairs(self.recipes) do
+            machine:setRecipe(recipe)
+            machine:start()
+            if machine:isRunning() then
+                debugf("Started refinery '%s' with recipe %s", machine:name(), machine:mainProduct():getName())
+                return
+            end
         end
+
+        debugf("Failed to restart refinery '%s'.", machine:name())
     end
 end
 
