@@ -4,18 +4,17 @@
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 local useLocal = true --export: Use require() to load local scripts if present. Useful during development.
-local logging = true --export: Enable controller debug output.
+local logging = true  --export: Enable controller debug output.
 
-modulaSettings = { 
+modulaSettings = {
     name = "Auto Refiner",
     version = "1.0",
-    logging = logging, 
+    logging = logging,
     useLocal = useLocal,
     modules = {
-        ["samedicorp.modula.modules.industry"] = { },
-        ["samedicorp.auto-refiner.main"] = { }
+        ["samedicorp.modula.modules.industry"] = {},
+        ["samedicorp.modula.modules.screen"] = {},
+        ["samedicorp.auto-refiner.main"] = {}
     },
     templates = "samedicorp/auto-refiner/templates"
 }
-
-

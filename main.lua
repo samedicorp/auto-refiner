@@ -23,7 +23,8 @@ function Module:onStart()
     debugf("Auto Refiner started.")
 
     self:attachToScreen()
-    self.industry = modula:getService("industry")
+    local industry = modula:getService("industry")
+    self.industry = industry
 
     self.recipes = {
         2240749601, -- Pure Aluminium
@@ -50,15 +51,10 @@ function Module:onStart()
         -- 2007627267, -- Pure Vanadium
     }
 
-    local indices = {}
-    for i, v in ipairs(self.recipes) do
-        indices[v] = i
-    end
-    self.indices = indices
-
     modula:addTimer("onCheckMachines", 1.0)
 
-    self.industry:reportMachines()
+    self:attachToScreen()
+    industry:reportMachines()
     self:restartMachines()
 end
 
@@ -97,9 +93,11 @@ function Module:restartMachine(machine)
         if not machine:isStopped() then
             machine:stop()
         end
-        machine:setRecipe(recipe)
-        machine:start()
-        debugf("Trying '%s' for %s.", machine:mainProduct():getName(), machine:name())
+
+        if machine:setRecipe(recipe) == 0 then
+            machine:start()
+            debugf("Trying '%s' for %s.", system.getItem(recipe).locDisplayName, machine:name())
+        end
     end
 end
 
@@ -109,7 +107,7 @@ function Module:onCommand(command, parameters)
         if industry then
             local machines = industry:getMachines()
             for i, machine in ipairs(machines) do
-                debugf("%s, -- %s", machine.mainProduct.id, machine.mainProduct:getName())
+                debugf("%s, -- %s", machine.mainProduct.id, machine.mainProduct.name)
             end
         else
             debugf("No industry service found.")
