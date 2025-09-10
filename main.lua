@@ -56,9 +56,10 @@ function Module:onStart()
     end
     self.indices = indices
 
-    modula:addTimer("onCheckMachines", 10.0)
+    modula:addTimer("onCheckMachines", 60.0)
 
     self.industry:reportMachines()
+    self:restartMachines()
 end
 
 function Module:onStop()
@@ -91,15 +92,16 @@ function Module:restartMachine(machine)
     if machine:isStopped() or machine:isMissingIngredients() or machine:isMissingSchematics() then
         machine:stop()
         for _, recipe in ipairs(self.recipes) do
-            machine:setRecipe(recipe)
-            machine:start()
-            if machine:isRunning() then
-                debugf("Started refinery '%s' with recipe %s", machine:name(), machine:mainProduct():getName())
-                return
+            if machine:setRecipe(recipe) == 0 then
+                machine:start()
+                if machine:isRunning() then
+                    debugf("Started '%s' making %s", machine:name(), machine:mainProduct():getName())
+                    return
+                end
             end
         end
 
-        debugf("Failed to restart refinery '%s'.", machine:name())
+        debugf("Failed to restart '%s'.", machine:name())
     end
 end
 
