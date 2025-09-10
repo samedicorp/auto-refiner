@@ -7,16 +7,15 @@ local useLocal = true --export: Use require() to load local scripts if present. 
 local logging = true --export: Enable controller debug output.
 
 modulaSettings = { 
-    name = "Container Monitor",
+    name = "Auto Refiner",
     version = "1.0",
     logging = logging, 
     useLocal = useLocal,
     modules = {
-        ["samedicorp.modula.modules.containers"] = { },
-        ["samedicorp.modula.modules.screen"] = { },
-        ["samedicorp.container-monitor.main"] = { }
+        ["samedicorp.modula.modules.industry"] = { },
+        ["samedicorp.auto-refiner.main"] = { }
     },
-    templates = "samedicorp/container-monitor/templates"
+    templates = "samedicorp/auto-refiner/templates"
 }
 
 

@@ -4,15 +4,15 @@
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 -- If setting up manually, add the following handler to any connected screens:
-    -- local failure = modula:call("onScreenReply", output)
-    -- if failure then 
-    --     error(failure) 
-    -- end
+-- local failure = modula:call("onScreenReply", output)
+-- if failure then
+--     error(failure)
+-- end
 
-local Module = { }
+local Module = {}
 
 function Module:register(parameters)
-    modula:registerForEvents(self, "onStart", "onStop", "onContainerChanged")
+    modula:registerForEvents(self, "onStart", "onStop", "onCheckMachines", "onCommand")
 end
 
 -- ---------------------------------------------------------------------
@@ -20,17 +20,49 @@ end
 -- ---------------------------------------------------------------------
 
 function Module:onStart()
-    debugf("Container Monitor started.")
+    debugf("Auto Refiner started.")
 
     self:attachToScreen()
-    local containers = modula:getService("containers")
-    if containers then
-        containers:findContainers("ContainerSmallGroup", "ContainerMediumGroup", "ContainerLargeGroup", "ContainerXLGroup")
+    self.industry = modula:getService("industry")
+
+    self.recipes = {
+        2240749601, -- Pure Aluminium
+        2112763718, -- Pure Calcium
+        159858782,  -- Pure Carbon
+        2031444137, -- Pure Cobalt
+        1466453887, -- Pure Copper
+        2147954574, -- Pure Chromium
+        3323724376, -- Pure Flourine
+        3837955371, -- Pure Gold
+        1010524904, -- Pure Hydrogen
+        198782496,  -- Pure Iron
+        3810111622, -- Pure Lithium
+        2421303625, -- Pure Manganese
+        3012303017, -- Pure Nickel
+        1126600143, -- Pure Niobium
+        947806142,  -- Pure Oxygen
+        3211418846, -- Pure Scandium
+        2589986891, -- Pure Silicon
+        1807690770, -- Pure Silver
+        3603734543, -- Pure Sodium
+        3822811562, -- Pure Sulfur
+        752542080,  -- Pure Titanium
+        2007627267, -- Pure Vanadium
+    }
+
+    local indices = {}
+    for i, v in ipairs(self.recipes) do
+        indices[v] = i
     end
+    self.indices = indices
+
+    modula:addTimer("onCheckMachines", 1.0)
+
+    self.industry:reportMachines()
 end
 
 function Module:onStop()
-    debugf("Container Monitor stopped.")
+    debugf("Auto Refiner stopped.")
 end
 
 function Module:onContainerChanged(container)
@@ -40,6 +72,51 @@ end
 function Module:onScreenReply(reply)
 end
 
+function Module:onCheckMachines()
+    self:restartMachines()
+end
+
+function Module:restartMachines()
+    local industry = self.industry
+    if industry then
+        industry:withMachines(function(machine)
+            if machine:label():find("Refiner") then
+                self:restartMachine(machine)
+            end
+        end)
+    end
+end
+
+function Module:restartMachine(machine)
+    if machine:isStopped() or machine:isMissingIngredients() or machine:isMissingSchematics() then
+        local currentIndex = machine.currentIndex or 0
+        local nextIndex = 1 + (currentIndex % #self.recipes)
+        machine.currentIndex = nextIndex
+        local recipeId = self.recipes[nextIndex]
+        machine:stop()
+        machine:setRecipe(recipeId)
+        machine:start()
+        if machine:isRunning() then
+            debugf("Restarted refinery '%s' with recipe %s", machine:name(), machine:mainProduct():getName())
+        else
+            debugf("Failed to restart refinery '%s' with recipe %s", machine:name(), machine:mainProduct():getName())
+        end
+    end
+end
+
+function Module:onCommand(command, parameters)
+    if command == "list" then
+        local industry = modula:getService("industry")
+        if industry then
+            local machines = industry:getMachines()
+            for i, machine in ipairs(machines) do
+                debugf("%s, -- %s", machine.mainProduct.id, machine.mainProduct:getName())
+            end
+        else
+            debugf("No industry service found.")
+        end
+    end
+end
 
 -- ---------------------------------------------------------------------
 -- Internal
