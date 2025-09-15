@@ -13,6 +13,7 @@ local Module = {}
 
 function Module:register(parameters)
     modula:registerForEvents(self, "onStart", "onStop", "onCheckMachines", "onCommand")
+    self.logMachines = parameters.logMachines or false
 end
 
 -- ---------------------------------------------------------------------
@@ -32,7 +33,7 @@ function Module:onStart()
         159858782,  -- Pure Carbon
         -- 2031444137, -- Pure Cobalt
         1466453887, -- Pure Copper
-        -- 2147954574, -- Pure Chromium
+        2147954574, -- Pure Chromium
         -- 3323724376, -- Pure Flourine
         -- 3837955371, -- Pure Gold
         -- 1010524904, -- Pure Hydrogen
@@ -45,7 +46,7 @@ function Module:onStart()
         -- 3211418846, -- Pure Scandium
         2589986891, -- Pure Silicon
         -- 1807690770, -- Pure Silver
-        -- 3603734543, -- Pure Sodium
+        3603734543, -- Pure Sodium
         -- 3822811562, -- Pure Sulfur
         -- 752542080,  -- Pure Titanium
         -- 2007627267, -- Pure Vanadium
@@ -54,7 +55,11 @@ function Module:onStart()
     modula:addTimer("onCheckMachines", 1.0)
 
     self:attachToScreen()
-    industry:reportMachines()
+
+    if self.logMachines then
+        industry:reportMachines()
+    end
+
     self:restartMachines()
 end
 
@@ -85,7 +90,7 @@ function Module:restartMachines()
 end
 
 function Module:restartMachine(machine)
-    if machine:isStopped() or machine:isMissingIngredients() or machine:isMissingSchematics() then
+    if machine:isStopped() or machine:isMissingIngredients() or machine:isMissingSchematics() or machine:isPending() then
         local index = (1 + (machine.index or 0) % #self.recipes)
         machine.index = index
         local recipe = self.recipes[index]
@@ -96,7 +101,12 @@ function Module:restartMachine(machine)
 
         if machine:setRecipe(recipe) == 0 then
             machine:start()
-            debugf("Trying '%s' for %s.", system.getItem(recipe).locDisplayName, machine:name())
+            machine.target = recipe
+        end
+    elseif machine:isRunning() then
+        if machine.actual ~= machine.target then
+            debugf("Switched to '%s' for %s.", system.getItem(recipe).locDisplayName, machine:name())
+            machine.actual = machine.target
         end
     end
 end
